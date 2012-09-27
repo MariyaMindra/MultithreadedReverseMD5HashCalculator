@@ -20,16 +20,24 @@ namespace FindPasswordMD5HashExem
 
         }
 
+        // If you can pass _threadCount, _passwdLength and _rangeOptions to this method directly 
+        // this method could be made static and thread safe
+        // you'll be able to delete constuctor and private fields in this case
         public char[,] GetStartingPoints ()
         {
             int range=0;
             if ((_rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital) range += 26;//65-90 A-Z
             if ((_rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower) range += 26; //97-122 a-z
             if ((_rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers) range += 10; //0-9
-            char[,] startPoint=new char[_threadCount, _passwdLength];
+            char[,] startPoint = new char[_threadCount, _passwdLength]; // _threadCount+1 //startPoint better 'boundaries'
 
-            long variant=(long)Math.Pow(range, _passwdLength);
-            long rangeForThread = variant/_threadCount;
+            long variant=(long)Math.Pow(range, _passwdLength); // variant == possibleCombinations
+            long rangeForThread = variant / _threadCount;  // rangeForThread == combinationsPerThread
+
+            // for i = 0 .. _threadCount
+            //  boundaries[i] = GetBoundary(threadNo, combinationsPerThread, possibleCombinations)
+
+            // this code should be moved to GetBoundary static method
             int [] deltaChar=new int[_passwdLength];
             int mydeltaChar = 0;
             for (int i=0; i<_passwdLength; i++)

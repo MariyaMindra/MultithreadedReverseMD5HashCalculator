@@ -18,36 +18,51 @@ namespace FindPasswordMD5HashExem
         private PasswordOptions _options;
         //private StructureStringMd5 _inputData;
         private string _md5;
-        private int _length;
+        private int _passwdLength;
         public string Password = "";
+        private int _threadCount;
 
-        public Generator(int length, PasswordOptions options, string md5) // StructureStringMd5 inputData
+        /// <summary>
+        /// class RangealculateForThread public static int[][] GetStartingPoints (int threadCount, int passwdLength, PasswordOptions rangeOptions)
+        /// </summary>
+        /// <param name="passwdLength"></param>
+        /// <param name="options"></param>
+        /// <param name="md5"></param>
+
+        public Generator(int passwdLength, PasswordOptions options, string md5, int threadCount) // StructureStringMd5 inputData
         {
             _options = options;
-            _innerString = new char[length];
-            _length = length;
+            _innerString = new char[passwdLength];
+            _passwdLength = passwdLength;
             _md5 = md5;
+            _threadCount = threadCount;
         }
 
-        //public StructureStringMd5 FindPassword()
-        //{
-        //    // password generation logic
-           
+        //loop for GeneratePasswords . 
+        public void ThreadCracker ()
+        {
+            int range = GetRange();
+            int [][]boundaries=RangeCalculateForThreads.GetStartingPoints(_threadCount, _passwdLength, range);
+            for (int i=0; i<_threadCount; i++)
+            {
+                int[] startBoundary = boundaries[i];
+                int[] endBoundary = boundaries[i + 1];
+                //depth? 
+                
 
-        //    string Password=null;
+                if (GeneratePasswords(startBoundary, endBoundary, _passwdLength, range)) break;
+            }
 
-        //    string _md5Conv=CalculateMd5.CalculateMd5Hash(Password);
+        }
 
-        //    StructureStringMd5 result = new StructureStringMd5
-        //                                 {
-        //                                     Md5Byte = _md5Conv, 
-        //                                     Password = String.Join("", _innerString)
-        //                                 };
-        //    if (VerifyMd5Hash(result))  
-        //                return result;
-        //    return null;
-
-        //}
+        private int GetRange()
+        {
+            int range = 0;
+            if ((_options & PasswordOptions.Capital) == PasswordOptions.Capital) range += 26;//65-90 A-Z
+            if ((_options & PasswordOptions.Lower) == PasswordOptions.Lower) range += 26; //97-122 a-z
+            if ((_options & PasswordOptions.Numbers) == PasswordOptions.Numbers) range += 10; //0-9
+            return range;
+        }
 
         public bool VerifyMd5Hash (string probe)
         {
@@ -55,16 +70,18 @@ namespace FindPasswordMD5HashExem
             //return (System.String.Compare(result.Md5Byte, _md5)==0);
         }
 
-        public bool GeneratePasswords (char[] probe, int depth)
+
+        public bool GeneratePasswords(int[] probe, int[] endBoundary, int depth, int range) //probe==StartBounder
         {
             bool result = false;
-            string probeString = String.Join("", probe);
+            char[] probeChar = CharForThread(probe, _options);
+            
+            string probeString = String.Join("", probeChar);
 
             if (depth==0)
             {
                 if (VerifyMd5Hash(probeString))
                 {
-                    //new StructureStringMd5 {Md5Byte = _md5, Password = probeString};}
                     Password = probeString;
                     return true;
                 }
@@ -72,28 +89,102 @@ namespace FindPasswordMD5HashExem
                 //Console.WriteLine(probeString);
                 return false;
             }
-                
 
-            for (int i = 48; i <= 57; i++)
+            if (probe != endBoundary)
             {
-                probe[depth-1]= Convert.ToChar(i);
-                result = GeneratePasswords(probe, depth - 1);
-                if (result) break;
+                for (int i = 0; i <= range; i++)
+                {
+                    probe[depth - 1] = i;
+                    result = GeneratePasswords(probe, endBoundary, depth - 1, range);
+                    if (result) break;
+                }
+                return result;
             }
-            return result;
-            //char[] nextAttempt = lastPassword.Password.ToCharArray();
-
-            //if ((_options & PasswordOptions.Capital) == PasswordOptions.Capital)
-            //{
-
-            //}
-
-            //for (var i = 0; i < lastPassword.Password.Length; i++)
-            //{
-            //    nextAttempt[lastPassword.Password.Length-depth]=
-            //}
-            //return new StructureStringMd5()}
+            
+            return false;
         }
+
+
+        private static char[] CharForThread(int[] deltaChar, PasswordOptions rangeOptions)
+        {
+            char[] charForThread = new char[deltaChar.Length];
+            if ((rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital && (rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower && (rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers)
+            {
+                for (int i = 0; i < deltaChar.Length; i++)
+                {
+                    int symbolValue = 65 + deltaChar[i];
+                    if (symbolValue <= 90) charForThread[i] = (char)symbolValue;
+                    else if ((deltaChar[i] - 26) <= 26) charForThread[i] = (char)(deltaChar[i] - 26 + 97);
+                    else charForThread[i] = (char)(deltaChar[i] - 52);
+                }
+                return charForThread;
+            }
+
+            if ((rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital && (rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower)
+            {
+                for (int i = 0; i < deltaChar.Length; i++)
+                {
+                    int symbolValue = 65 + deltaChar[i];
+                    if (symbolValue <= 90) charForThread[i] = (char)symbolValue;
+                    else charForThread[i] = (char)(deltaChar[i] - 26 + 97);
+
+                }
+                return charForThread;
+            }
+
+            if ((rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital && (rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers)
+            {
+                for (int i = 0; i < deltaChar.Length; i++)
+                {
+                    int symbolValue = 65 + deltaChar[i];
+                    if (symbolValue <= 90) charForThread[i] = (char)symbolValue;
+                    else charForThread[i] = (char)(deltaChar[i] - 26);
+
+                }
+                return charForThread;
+            }
+
+            if ((rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower && (rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers)
+            {
+                for (int i = 0; i < deltaChar.Length; i++)
+                {
+                    int symbolValue = 97 + deltaChar[i];
+                    if (symbolValue <= 122) charForThread[i] = (char)symbolValue;
+                    else charForThread[i] = (char)(deltaChar[i] - 26);
+                }
+                return charForThread;
+            }
+
+
+            if ((rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital)
+            {
+                for (int i = 0; i < deltaChar.Length; i++)
+                {
+                    charForThread[i] = (char)(65 + deltaChar[i]);
+                }
+                return charForThread;
+            }
+            if ((rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower)
+            {
+                for (int i = 0; i < deltaChar.Length; i++)
+                {
+                    charForThread[i] = (char)(97 + deltaChar[i]);
+                }
+                return charForThread;
+            }
+            if ((rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers)
+            {
+                for (int i = 0; i < deltaChar.Length; i++)
+                {
+                    charForThread[i] = (char)(48 + deltaChar[i]);
+                }
+                return charForThread;
+            }
+
+            return charForThread;
+
+        }
+
     }
 
 

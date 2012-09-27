@@ -31,8 +31,8 @@ namespace FindPasswordMD5HashExem
             //generator.GeneratePasswords(new char[3]{'0','0','0'},3);
             //Console.WriteLine(generator.Password);
 
-            RangeCalculateForThreads range=new RangeCalculateForThreads(5, 4, PasswordOptions.Capital);
-            range.GetStartingPoints();
+            RangeCalculateForThreads.GetStartingPoints(5, 4, PasswordOptions.Capital);
+            
         }
 
         private void btnClose_Click(object sender, EventArgs e)

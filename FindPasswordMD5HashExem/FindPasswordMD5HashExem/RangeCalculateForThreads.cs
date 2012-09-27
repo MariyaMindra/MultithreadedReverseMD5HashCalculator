@@ -60,7 +60,30 @@ namespace FindPasswordMD5HashExem
                      else charForThread[i] = (char)(deltaChar[i] - 52);
                 }
                 return charForThread;
+            }
 
+            if ((_rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital && (_rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower)
+            {
+                for (int i = 0; i < deltaChar.Length; i++)
+                {
+                    int symbolValue = 65 + deltaChar[i];
+                    if (symbolValue <= 90) charForThread[i] = (char)symbolValue;
+                    else charForThread[i] = (char)(deltaChar[i] - 26 + 97);
+                   
+                }
+                return charForThread;
+            }
+
+            if ((_rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital && (_rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers)
+            {
+                for (int i = 0; i < deltaChar.Length; i++)
+                {
+                    int symbolValue = 65 + deltaChar[i];
+                    if (symbolValue <= 90) charForThread[i] = (char)symbolValue;
+                    else charForThread[i] = (char)(deltaChar[i] - 26);
+                   
+                }
+                return charForThread;
             }
 
             if ((_rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital)

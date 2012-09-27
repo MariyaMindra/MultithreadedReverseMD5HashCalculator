@@ -1,1 +1,6 @@
 _ReSharper.FindPasswordMD5HashExem
+/FindPasswordMD5HashExem/_ReSharper.FindPasswordMD5HashExem
+/FindPasswordMD5HashExem/FindPasswordMD5HashExem/bin/Debug
+/FindPasswordMD5HashExem/FindPasswordMD5HashExem/obj
+*.suo
+*.user

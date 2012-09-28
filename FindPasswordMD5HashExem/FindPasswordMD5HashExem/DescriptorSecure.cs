@@ -41,7 +41,27 @@ namespace FindPasswordMD5HashExem
             Close();
         }
 
+        private void TextBoxPasswordValidated(object sender, EventArgs e)
+        {
+            if (IsPasswordValid() == false)
+            {
+                epPassword.SetError(this.tbPassword, "Password isn't required");
 
+            }
+            else
+            {
+                // Clear the error, if any, in the error provider.
+                epPassword.SetError(this.tbPassword, String.Empty);
+            }
+
+        }
+
+        private bool IsPasswordValid()
+        {
+            var password = this.tbPassword.Text;
+            return true;
+
+        }
    
 
     }

@@ -21,15 +21,12 @@ namespace FindPasswordMD5HashExem
         //private StructureStringMd5 _inputData;
         private string _md5;
         private int _passwdLength;
-        public string Password = "";
+        private string Password = "";
         private int _threadCount;
 
         /// <summary>
         /// class RangealculateForThread public static int[][] GetStartingPoints (int threadCount, int passwdLength, PasswordOptions rangeOptions)
         /// </summary>
-        /// <param name="passwdLength"></param>
-        /// <param name="options"></param>
-        /// <param name="md5"></param>
 
         public Generator(int passwdLength, PasswordOptions options, string md5, int threadCount) // StructureStringMd5 inputData
         {
@@ -43,7 +40,7 @@ namespace FindPasswordMD5HashExem
         //loop for GeneratePasswords
         // this thread cracker should receive delegate as an argument to let the application know that the search is finished.
         // and it should return a CancellationTokenSource - your token variable
-        public void ThreadCracker ()
+        public CancellationTokenSource ThreadCracker(Action<string> sendPassword)
         {
             int range = GetRange();
             int [][]boundaries=RangeCalculateForThreads.GetStartingPoints(_threadCount, _passwdLength, range);
@@ -51,7 +48,7 @@ namespace FindPasswordMD5HashExem
             var token = tokenSource.Token;
 
             // as you are passing cancelation token to each task, you don't need to store them in a list
-            List<Task> tasks = new List<Task>();
+            //List<Task> tasks = new List<Task>();
 
             for (int i=0; i<_threadCount; i++)
             {
@@ -64,24 +61,27 @@ namespace FindPasswordMD5HashExem
                 // as ThreadCracker method returns a CancelationToken, it will be stored somewhere and when the password is received by delegate
                 // it will call Cancel() method of your cancelation token source. All the tasks would be canceled. 
                 // no complex logic
-                tasks[i]=Task.Factory.StartNew(() => GeneratePasswords(startBoundary, endBoundary, _passwdLength, range, token, tokenSource), token);
+                Task task=Task.Factory.StartNew(() => GeneratePasswords(startBoundary, endBoundary, _passwdLength, range, token, tokenSource, sendPassword), token);
 
             }
             // no need to do anything here
             // let the scheduler do its work with the tasks
+
+
             
-            try
-            {
-                //wait all task complete 
-                //???
-            }
-            catch (AggregateException e)
-            {
-                for (int i=0; i<tasks.ToArray().Length; i++)
-                {
-                    tasks[i].Dispose(); ///??????
-                }
-            }
+            return tokenSource;
+            //try
+            //{
+            //    //wait all task complete 
+            //    //???
+            //}
+            //catch (AggregateException e)
+            //{
+            //    for (int i=0; i<tasks.ToArray().Length; i++)
+            //    {
+            //        tasks[i].Dispose(); ///??????
+            //    }
+            //}
 
         }
 
@@ -100,7 +100,7 @@ namespace FindPasswordMD5HashExem
         }
 
 
-        public bool GeneratePasswords(int[] probe, int[] endBoundary, int depth, int range, CancellationToken ct, CancellationTokenSource tokenSource) //probe==StartBounder
+        public bool GeneratePasswords(int[] probe, int[] endBoundary, int depth, int range, CancellationToken ct, CancellationTokenSource tokenSource, Action<string> sendPassword) //probe==StartBounder
         {
             bool result = false;
             char[] probeChar = CharForThread(probe, _options);
@@ -112,12 +112,10 @@ namespace FindPasswordMD5HashExem
                 if (VerifyMd5Hash(probeString))
                 {
                     Password = probeString;
-                   
-                    tokenSource.Cancel();
+                    sendPassword(Password); //???? 
+                   // tokenSource.Cancel(); //тут не надо????
                     return true;
                 }
-                
-                //Console.WriteLine(probeString);
                 return false;
             }
             if (ct.IsCancellationRequested)
@@ -130,7 +128,7 @@ namespace FindPasswordMD5HashExem
                 for (int i = 0; i <= range; i++)
                 {
                     probe[depth - 1] = i;
-                    result = GeneratePasswords(probe, endBoundary, depth - 1, range, ct, tokenSource);
+                    result = GeneratePasswords(probe, endBoundary, depth - 1, range, ct, tokenSource, sendPassword);
                     if (result) break;
                 }
                 return result;

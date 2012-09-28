@@ -12,10 +12,6 @@ namespace FindPasswordMD5HashExem
     public partial class DescriptorSecure : Form
     {
         
-        //private int ThreadCount { get; set; }
-        //private int PasswdLength { get; set; }
-        //private PasswordOptions RangeOptions { get; set; }
-
 
         public DescriptorSecure()
         {
@@ -28,10 +24,13 @@ namespace FindPasswordMD5HashExem
         private void btnFind_Click(object sender, EventArgs e)
         {
             btnFind.Enabled = false;
+            Action<string> GetPassword;
+            GetPassword = ReceivePassword;
             Generator generator = new Generator(3, PasswordOptions.Capital, CalculateMd5.CalculateMd5Hash("ABC"), 3);
-            generator.ThreadCracker();
+            var tokenSource=generator.ThreadCracker(GetPassword);
+            tokenSource.Cancel();
             //Console.WriteLine(generator.Password);
-            tbResult.Text = generator.Password;
+            //tbResult.Text = generator.Password;
             //RangeCalculateForThreads.GetStartingPoints(5, 4, PasswordOptions.Capital);
 
         }
@@ -40,6 +39,13 @@ namespace FindPasswordMD5HashExem
         {
             Close();
         }
+
+
+        public void ReceivePassword(string password)
+        {
+            tbResult.Text = password;
+        }
+
 
         private void TextBoxPasswordValidated(object sender, EventArgs e)
         {

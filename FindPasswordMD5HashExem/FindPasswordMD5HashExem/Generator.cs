@@ -18,7 +18,6 @@ namespace FindPasswordMD5HashExem
     {
         private char[] _innerString;
         private PasswordOptions _options;
-        //private StructureStringMd5 _inputData;
         private string _md5;
         private int _passwdLength;
         private string Password = "";
@@ -37,9 +36,6 @@ namespace FindPasswordMD5HashExem
             _threadCount = threadCount;
         }
 
-        //loop for GeneratePasswords
-        // this thread cracker should receive delegate as an argument to let the application know that the search is finished.
-        // and it should return a CancellationTokenSource - your token variable
         public CancellationTokenSource ThreadCracker(Action<string> sendPassword)
         {
             int range = GetRange();
@@ -47,42 +43,20 @@ namespace FindPasswordMD5HashExem
             var tokenSource = new CancellationTokenSource();
             var token = tokenSource.Token;
 
-            // as you are passing cancelation token to each task, you don't need to store them in a list
-            //List<Task> tasks = new List<Task>();
-
             for (int i=0; i<_threadCount; i++)
             {
                 int[] startBoundary = boundaries[i];
                 int[] endBoundary = boundaries[i + 1];
-                // depth? 
-                // if (GeneratePasswords(startBoundary, endBoundary, _passwdLength, range)) break;
-                // it would be much better to pass a delegate to GeneratePasswords method
-                // when the password is found, GeneratePasswords method will call the delegate and pass valid password as an argument
-                // as ThreadCracker method returns a CancelationToken, it will be stored somewhere and when the password is received by delegate
-                // it will call Cancel() method of your cancelation token source. All the tasks would be canceled. 
-                // no complex logic
-                Task task=Task.Factory.StartNew(() => GeneratePasswords(startBoundary, endBoundary, _passwdLength, range, token, tokenSource, sendPassword), token);
+
+                int[] probe = (int[])startBoundary.Clone();
+                Task task=Task.Factory.StartNew(() => GeneratePasswords(probe, startBoundary,endBoundary, _passwdLength, range, token, tokenSource, sendPassword), token);
+                
+
+                //GeneratePasswords(probe, startBoundary, endBoundary, _passwdLength, range, token, tokenSource,
+                //                  sendPassword);
 
             }
-            // no need to do anything here
-            // let the scheduler do its work with the tasks
-
-
-            
             return tokenSource;
-            //try
-            //{
-            //    //wait all task complete 
-            //    //???
-            //}
-            //catch (AggregateException e)
-            //{
-            //    for (int i=0; i<tasks.ToArray().Length; i++)
-            //    {
-            //        tasks[i].Dispose(); ///??????
-            //    }
-            //}
-
         }
 
         private int GetRange()
@@ -100,7 +74,7 @@ namespace FindPasswordMD5HashExem
         }
 
 
-        public bool GeneratePasswords(int[] probe, int[] endBoundary, int depth, int range, CancellationToken ct, CancellationTokenSource tokenSource, Action<string> sendPassword) //probe==StartBounder
+        public bool GeneratePasswords(int[] probe, int[] startBoundary, int[] endBoundary, int depth, int range, CancellationToken ct, CancellationTokenSource tokenSource, Action<string> sendPassword) //probe==StartBounder
         {
             bool result = false;
             char[] probeChar = CharForThread(probe, _options);
@@ -109,45 +83,44 @@ namespace FindPasswordMD5HashExem
 
             if (depth==0)
             {
+                Console.WriteLine(probeString);
                 if (VerifyMd5Hash(probeString))
                 {
                     Password = probeString;
-                    sendPassword(Password); //???? 
-                   // tokenSource.Cancel(); //тут не надо????
+                    sendPassword(Password); 
                     return true;
                 }
                 return false;
             }
             if (ct.IsCancellationRequested)
             {
-                ct.ThrowIfCancellationRequested();
+                Console.WriteLine("Task is canceled");
             }
 
-            if (probe != endBoundary)
-            {
-                for (int i = 0; i <= range; i++)
+            
+            for (int i = startBoundary[depth-1]; i <= endBoundary[depth-1]; i++)
                 {
                     probe[depth - 1] = i;
-                    result = GeneratePasswords(probe, endBoundary, depth - 1, range, ct, tokenSource, sendPassword);
+                    result = GeneratePasswords(probe, startBoundary, endBoundary, depth - 1, range, ct, tokenSource, sendPassword);
                     if (result) break;
                 }
                 return result;
-            }
-            
-            return false;
+           
         }
 
 
         private static char[] CharForThread(int[] deltaChar, PasswordOptions rangeOptions)
         {
             char[] charForThread = new char[deltaChar.Length];
-            if ((rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital && (rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower && (rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers)
+            bool capitals = (rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital;
+
+            if (capitals && (rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower && (rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers)
             {
                 for (int i = 0; i < deltaChar.Length; i++)
                 {
                     int symbolValue = 65 + deltaChar[i];
                     if (symbolValue <= 90) charForThread[i] = (char)symbolValue;
-                    else if ((deltaChar[i] - 26) <= 26) charForThread[i] = (char)(deltaChar[i] - 26 + 97);
+                    else if ((deltaChar[i] - 26) <= 26) charForThread[i] = (char)(deltaChar[i] -26 + 97);
                     else charForThread[i] = (char)(deltaChar[i] - 52);
                 }
                 return charForThread;

@@ -35,18 +35,22 @@
             this.tbPassword = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.tbMd5 = new System.Windows.Forms.TextBox();
+            this.numThread = new System.Windows.Forms.NumericUpDown();
             this.label3 = new System.Windows.Forms.Label();
             this.tbResult = new System.Windows.Forms.TextBox();
             this.Result = new System.Windows.Forms.Label();
             this.btnFind = new System.Windows.Forms.Button();
             this.btnClose = new System.Windows.Forms.Button();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.gbRange = new System.Windows.Forms.GroupBox();
             this.epPassword = new System.Windows.Forms.ErrorProvider(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
-            this.groupBox1.SuspendLayout();
+            this.epThread = new System.Windows.Forms.ErrorProvider(this.components);
+            this.epRangeChecked = new System.Windows.Forms.ErrorProvider(this.components);
+            ((System.ComponentModel.ISupportInitialize)(this.numThread)).BeginInit();
+            this.gbRange.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.epPassword)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.epThread)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.epRangeChecked)).BeginInit();
             this.SuspendLayout();
             // 
             // cbRangAZ
@@ -81,10 +85,11 @@
             // 
             // tbPassword
             // 
-            this.tbPassword.Location = new System.Drawing.Point(48, 39);
+            this.tbPassword.Location = new System.Drawing.Point(64, 29);
             this.tbPassword.Name = "tbPassword";
             this.tbPassword.Size = new System.Drawing.Size(193, 20);
             this.tbPassword.TabIndex = 4;
+            this.tbPassword.Validated += new System.EventHandler(this.TextBoxPasswordValidated);
             // 
             // label1
             // 
@@ -104,19 +109,20 @@
             this.label2.TabIndex = 6;
             this.label2.Text = "MD5 hash code";
             // 
-            // textBox2
+            // tbMd5
             // 
-            this.textBox2.Location = new System.Drawing.Point(320, 38);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(100, 20);
-            this.textBox2.TabIndex = 7;
+            this.tbMd5.Location = new System.Drawing.Point(409, 29);
+            this.tbMd5.Name = "tbMd5";
+            this.tbMd5.Size = new System.Drawing.Size(100, 20);
+            this.tbMd5.TabIndex = 7;
             // 
-            // numericUpDown1
+            // numThread
             // 
-            this.numericUpDown1.Location = new System.Drawing.Point(121, 112);
-            this.numericUpDown1.Name = "numericUpDown1";
-            this.numericUpDown1.Size = new System.Drawing.Size(63, 20);
-            this.numericUpDown1.TabIndex = 8;
+            this.numThread.Location = new System.Drawing.Point(121, 112);
+            this.numThread.Name = "numThread";
+            this.numThread.Size = new System.Drawing.Size(63, 20);
+            this.numThread.TabIndex = 8;
+            this.numThread.Validated += new System.EventHandler(this.NumThreadValidated);
             // 
             // label3
             // 
@@ -163,44 +169,55 @@
             this.btnClose.UseVisualStyleBackColor = true;
             this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
             // 
-            // groupBox1
+            // gbRange
             // 
-            this.groupBox1.Controls.Add(this.cbRangAZ);
-            this.groupBox1.Controls.Add(this.cbRangeaz);
-            this.groupBox1.Controls.Add(this.cbRangeNumber);
-            this.groupBox1.Location = new System.Drawing.Point(241, 112);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(167, 122);
-            this.groupBox1.TabIndex = 14;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Range";
+            this.gbRange.Controls.Add(this.cbRangAZ);
+            this.gbRange.Controls.Add(this.cbRangeaz);
+            this.gbRange.Controls.Add(this.cbRangeNumber);
+            this.gbRange.Location = new System.Drawing.Point(241, 112);
+            this.gbRange.Name = "gbRange";
+            this.gbRange.Size = new System.Drawing.Size(167, 122);
+            this.gbRange.TabIndex = 14;
+            this.gbRange.TabStop = false;
+            this.gbRange.Text = "Range";
+            this.gbRange.Validated += new System.EventHandler(this.GbRangeValidated);
             // 
             // epPassword
             // 
             this.epPassword.ContainerControl = this;
+            // 
+            // epThread
+            // 
+            this.epThread.ContainerControl = this;
+            // 
+            // epRangeChecked
+            // 
+            this.epRangeChecked.ContainerControl = this;
             // 
             // DescriptorSecure
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(565, 374);
-            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.gbRange);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnFind);
             this.Controls.Add(this.Result);
             this.Controls.Add(this.tbResult);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.numericUpDown1);
-            this.Controls.Add(this.textBox2);
+            this.Controls.Add(this.numThread);
+            this.Controls.Add(this.tbMd5);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.tbPassword);
             this.Name = "DescriptorSecure";
             this.Text = "Descriptor";
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numThread)).EndInit();
+            this.gbRange.ResumeLayout(false);
+            this.gbRange.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.epPassword)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.epThread)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.epRangeChecked)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -214,15 +231,17 @@
         private System.Windows.Forms.TextBox tbPassword;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.NumericUpDown numericUpDown1;
+        private System.Windows.Forms.TextBox tbMd5;
+        private System.Windows.Forms.NumericUpDown numThread;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox tbResult;
         private System.Windows.Forms.Label Result;
         private System.Windows.Forms.Button btnFind;
         private System.Windows.Forms.Button btnClose;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox gbRange;
         private System.Windows.Forms.ErrorProvider epPassword;
+        private System.Windows.Forms.ErrorProvider epThread;
+        private System.Windows.Forms.ErrorProvider epRangeChecked;
     }
 }
 

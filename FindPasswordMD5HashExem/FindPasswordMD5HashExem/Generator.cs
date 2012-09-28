@@ -40,23 +40,36 @@ namespace FindPasswordMD5HashExem
             _threadCount = threadCount;
         }
 
-        //loop for GeneratePasswords . 
+        //loop for GeneratePasswords
+        // this thread cracker should receive delegate as an argument to let the application know that the search is finished.
+        // and it should return a CancellationTokenSource - your token variable
         public void ThreadCracker ()
         {
             int range = GetRange();
             int [][]boundaries=RangeCalculateForThreads.GetStartingPoints(_threadCount, _passwdLength, range);
             var tokenSource = new CancellationTokenSource();
             var token = tokenSource.Token;
+
+            // as you are passing cancelation token to each task, you don't need to store them in a list
             List<Task> tasks = new List<Task>();
+
             for (int i=0; i<_threadCount; i++)
             {
                 int[] startBoundary = boundaries[i];
                 int[] endBoundary = boundaries[i + 1];
-                //depth? 
-                //if (GeneratePasswords(startBoundary, endBoundary, _passwdLength, range)) break;
+                // depth? 
+                // if (GeneratePasswords(startBoundary, endBoundary, _passwdLength, range)) break;
+                // it would be much better to pass a delegate to GeneratePasswords method
+                // when the password is found, GeneratePasswords method will call the delegate and pass valid password as an argument
+                // as ThreadCracker method returns a CancelationToken, it will be stored somewhere and when the password is received by delegate
+                // it will call Cancel() method of your cancelation token source. All the tasks would be canceled. 
+                // no complex logic
                 tasks[i]=Task.Factory.StartNew(() => GeneratePasswords(startBoundary, endBoundary, _passwdLength, range, token, tokenSource), token);
 
             }
+            // no need to do anything here
+            // let the scheduler do its work with the tasks
+            
             try
             {
                 //wait all task complete 

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace FindPasswordMD5HashExem
 {
@@ -43,14 +45,29 @@ namespace FindPasswordMD5HashExem
         {
             int range = GetRange();
             int [][]boundaries=RangeCalculateForThreads.GetStartingPoints(_threadCount, _passwdLength, range);
+            var tokenSource = new CancellationTokenSource();
+            var token = tokenSource.Token;
+            List<Task> tasks = new List<Task>();
             for (int i=0; i<_threadCount; i++)
             {
                 int[] startBoundary = boundaries[i];
                 int[] endBoundary = boundaries[i + 1];
                 //depth? 
-                
+                //if (GeneratePasswords(startBoundary, endBoundary, _passwdLength, range)) break;
+                tasks[i]=Task.Factory.StartNew(() => GeneratePasswords(startBoundary, endBoundary, _passwdLength, range, token, tokenSource), token);
 
-                if (GeneratePasswords(startBoundary, endBoundary, _passwdLength, range)) break;
+            }
+            try
+            {
+                //wait all task complete 
+                //???
+            }
+            catch (AggregateException e)
+            {
+                for (int i=0; i<tasks.ToArray().Length; i++)
+                {
+                    tasks[i].Dispose(); ///??????
+                }
             }
 
         }
@@ -67,11 +84,10 @@ namespace FindPasswordMD5HashExem
         public bool VerifyMd5Hash (string probe)
         {
             return CalculateMd5.CalculateMd5Hash(probe) == _md5;
-            //return (System.String.Compare(result.Md5Byte, _md5)==0);
         }
 
 
-        public bool GeneratePasswords(int[] probe, int[] endBoundary, int depth, int range) //probe==StartBounder
+        public bool GeneratePasswords(int[] probe, int[] endBoundary, int depth, int range, CancellationToken ct, CancellationTokenSource tokenSource) //probe==StartBounder
         {
             bool result = false;
             char[] probeChar = CharForThread(probe, _options);
@@ -83,11 +99,17 @@ namespace FindPasswordMD5HashExem
                 if (VerifyMd5Hash(probeString))
                 {
                     Password = probeString;
+                   
+                    tokenSource.Cancel();
                     return true;
                 }
                 
                 //Console.WriteLine(probeString);
                 return false;
+            }
+            if (ct.IsCancellationRequested)
+            {
+                ct.ThrowIfCancellationRequested();
             }
 
             if (probe != endBoundary)
@@ -95,7 +117,7 @@ namespace FindPasswordMD5HashExem
                 for (int i = 0; i <= range; i++)
                 {
                     probe[depth - 1] = i;
-                    result = GeneratePasswords(probe, endBoundary, depth - 1, range);
+                    result = GeneratePasswords(probe, endBoundary, depth - 1, range, ct, tokenSource);
                     if (result) break;
                 }
                 return result;

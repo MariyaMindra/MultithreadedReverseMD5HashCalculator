@@ -27,12 +27,13 @@ namespace FindPasswordMD5HashExem
 
         private void btnFind_Click(object sender, EventArgs e)
         {
-            Generator generator = new Generator(3, PasswordOptions.Numbers, CalculateMd5.CalculateMd5Hash("123"), 3);
+            btnFind.Enabled = false;
+            Generator generator = new Generator(3, PasswordOptions.Capital, CalculateMd5.CalculateMd5Hash("ABC"), 3);
             generator.ThreadCracker();
-            Console.WriteLine(generator.Password);
-
+            //Console.WriteLine(generator.Password);
+            tbResult.Text = generator.Password;
             //RangeCalculateForThreads.GetStartingPoints(5, 4, PasswordOptions.Capital);
-            
+
         }
 
         private void btnClose_Click(object sender, EventArgs e)

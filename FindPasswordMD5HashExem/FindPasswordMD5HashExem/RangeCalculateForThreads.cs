@@ -7,8 +7,6 @@ namespace FindPasswordMD5HashExem
 {
     public static class RangeCalculateForThreads
     {
-        // this method could be made static and thread safe
-        // you'll be able to delete constuctor and private fields in this case
         public static int[][] GetStartingPoints(int threadCount, int passwdLength, int range)//(int threadCount, int passwdLength, PasswordOptions rangeOptions)
         {
             int[][] boundaries=new int[threadCount+1][];
@@ -32,7 +30,7 @@ namespace FindPasswordMD5HashExem
             {
                 mydeltaChar = (int) combinationsPerThread%range; //остаток от деления
                 combinationsPerThread /= range;
-                deltaChar[i] = mydeltaChar;
+                deltaChar[passwdLength-i-1] = mydeltaChar;
             }
             return deltaChar;
         }

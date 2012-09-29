@@ -50,7 +50,6 @@ namespace FindPasswordMD5HashExem
 
                 int[] probe = (int[])startBoundary.Clone();
                 Task task=Task.Factory.StartNew(() => GeneratePasswords(probe, startBoundary,endBoundary, _passwdLength, range, token, tokenSource, sendPassword), token);
-                
 
                 //GeneratePasswords(probe, startBoundary, endBoundary, _passwdLength, range, token, tokenSource,
                 //                  sendPassword);
@@ -97,8 +96,10 @@ namespace FindPasswordMD5HashExem
                 Console.WriteLine("Task is canceled");
             }
 
-            
-            for (int i = startBoundary[depth-1]; i <= endBoundary[depth-1]; i++)
+
+            if (probe.SequenceEqual(endBoundary)) return false;
+
+            for (int i = 0; i < range; i++)
                 {
                     probe[depth - 1] = i;
                     result = GeneratePasswords(probe, startBoundary, endBoundary, depth - 1, range, ct, tokenSource, sendPassword);
@@ -113,84 +114,33 @@ namespace FindPasswordMD5HashExem
         {
             char[] charForThread = new char[deltaChar.Length];
             bool capitals = (rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital;
+            bool lower = (rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower;
+            bool numbers = (rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers;
 
-            if (capitals && (rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower && (rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers)
+            List<Tuple<int, int>> ranges = new List<Tuple<int, int>>();
+            if (numbers) ranges.Add(new Tuple<int, int>(48, 58));
+            if (capitals) ranges.Add(new Tuple<int, int>(65, 91));
+            if (lower) ranges.Add(new Tuple<int, int>(97, 123));
+
+            for (int i = 0; i < deltaChar.Length; i++)
             {
-                for (int i = 0; i < deltaChar.Length; i++)
-                {
-                    int symbolValue = 65 + deltaChar[i];
-                    if (symbolValue <= 90) charForThread[i] = (char)symbolValue;
-                    else if ((deltaChar[i] - 26) <= 26) charForThread[i] = (char)(deltaChar[i] -26 + 97);
-                    else charForThread[i] = (char)(deltaChar[i] - 52);
-                }
-                return charForThread;
-            }
-
-            if ((rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital && (rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower)
-            {
-                for (int i = 0; i < deltaChar.Length; i++)
-                {
-                    int symbolValue = 65 + deltaChar[i];
-                    if (symbolValue <= 90) charForThread[i] = (char)symbolValue;
-                    else charForThread[i] = (char)(deltaChar[i] - 26 + 97);
-
-                }
-                return charForThread;
-            }
-
-            if ((rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital && (rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers)
-            {
-                for (int i = 0; i < deltaChar.Length; i++)
-                {
-                    int symbolValue = 65 + deltaChar[i];
-                    if (symbolValue <= 90) charForThread[i] = (char)symbolValue;
-                    else charForThread[i] = (char)(deltaChar[i] - 26);
-
-                }
-                return charForThread;
-            }
-
-            if ((rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower && (rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers)
-            {
-                for (int i = 0; i < deltaChar.Length; i++)
-                {
-                    int symbolValue = 97 + deltaChar[i];
-                    if (symbolValue <= 122) charForThread[i] = (char)symbolValue;
-                    else charForThread[i] = (char)(deltaChar[i] - 26);
-                }
-                return charForThread;
-            }
-
-
-            if ((rangeOptions & PasswordOptions.Capital) == PasswordOptions.Capital)
-            {
-                for (int i = 0; i < deltaChar.Length; i++)
-                {
-                    charForThread[i] = (char)(65 + deltaChar[i]);
-                }
-                return charForThread;
-            }
-            if ((rangeOptions & PasswordOptions.Lower) == PasswordOptions.Lower)
-            {
-                for (int i = 0; i < deltaChar.Length; i++)
-                {
-                    charForThread[i] = (char)(97 + deltaChar[i]);
-                }
-                return charForThread;
-            }
-            if ((rangeOptions & PasswordOptions.Numbers) == PasswordOptions.Numbers)
-            {
-                for (int i = 0; i < deltaChar.Length; i++)
-                {
-                    charForThread[i] = (char)(48 + deltaChar[i]);
-                }
-                return charForThread;
+                int currentChar = deltaChar[i];
+                charForThread[i] = ConvertToChar(ranges, currentChar);
             }
 
             return charForThread;
-
         }
 
+        private static char ConvertToChar(List<Tuple<int, int>> ranges, int currentChar)
+        {
+            foreach (var range in ranges)
+            {
+                int rangeLength = range.Item2 - range.Item1;
+                if (currentChar < rangeLength) return (char) (range.Item1 + currentChar);
+                currentChar -= rangeLength;
+            }
+            throw new Exception("Character not found");
+        }
     }
 
 
